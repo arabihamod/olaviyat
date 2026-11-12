@@ -56,7 +56,8 @@ select{background:var(--bg);color:var(--text);border:1px solid var(--line);borde
 </head>
 <body>
 <h1>داشبورد اولویت‌ها</h1>
-<p class="sub">امتیاز = ۲×اهمیت + ۲×فوریت + پایه − تلاش (هر معیار ۱ تا ۵)</p>
+<p class="sub">امتیاز = ۲×هدف + ۲×مهلت + بقاء − سختی (هر معیار ۱ تا ۵)</p>
+<p class="sub">هدف: چقدر به هدف‌هایم کمک می‌کند · مهلت: چقدر وقتش تنگ است · بقاء: چقدر امنیت و آرامشم را حفظ می‌کند · سختی: چقدر زمان و انرژی می‌گیرد</p>
 <div class="bar"><button data-tab="all">ترتیب کلی</button><button data-tab="dom">حوزه‌ها</button><button data-tab="mind">ذهن</button><button data-tab="bk">پشتیبان</button></div>
 <div id="root"></div>
 <script>
@@ -85,7 +86,7 @@ function viewDom(){
 return S.domains.map(function(d){
 var ts=S.tasks.filter(function(t){return t.d===d.id}).sort(by);
 return '<div class="card"><h2>'+E(d.name)+'</h2><input type="text" class="crit" value="'+E(d.crit)+'" data-a="c" data-id="'+d.id+'" aria-label="معیار حوزه">'+
-ts.map(function(t){return '<div class="t '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'"><div class="top"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+'><input type="text" class="n" value="'+E(t.n)+'" data-a="f" data-k="n" data-id="'+t.id+'"><span class="s">'+sc(t)+'</span><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div><div class="g">'+lab(t,"i","اهمیت")+lab(t,"u","فوریت")+lab(t,"b","پایه")+lab(t,"e","تلاش")+'</div></div>'}).join('')+
+ts.map(function(t){return '<div class="t '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'"><div class="top"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+'><input type="text" class="n" value="'+E(t.n)+'" data-a="f" data-k="n" data-id="'+t.id+'"><span class="s">'+sc(t)+'</span><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div><div class="g">'+lab(t,"i","هدف")+lab(t,"u","مهلت")+lab(t,"b","بقاء")+lab(t,"e","سختی")+'</div></div>'}).join('')+
 '<div class="add"><input type="text" id="add-'+d.id+'" placeholder="کار تازه…"><button data-add="'+d.id+'">افزودن</button></div></div>'}).join('')+
 '<button class="ghost" data-reset="1">بازنشانی به حالت اولیه</button>'}
 function render(){
@@ -128,7 +129,7 @@ var rs=S.domains.map(function(d){var s=S.tasks.filter(function(t){return t.d===d
 return '<div class="card"><h2>مقایسه‌ی حوزه‌ها</h2><div class="lab">میانگین سه کار برتر هر حوزه</div>'+rs.map(function(r){return '<div class="dr"><span class="dn2">'+E(r.n)+'</span><div class="bt"><i style="width:'+Math.round(r.a/24*100)+'%"></i></div><b>'+r.a.toFixed(1)+'</b></div>'}).join('')+'</div>'}
 function row(t,k,rank){
 var ex=OPEN===t.id;
-return '<div class="rw"><div class="r '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'" data-open="'+t.id+'"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+' aria-label="انجام شد">'+(rank?'<span class="rk">'+rank+'</span>':'')+'<span class="n">'+E(t.n)+'</span><span class="chip">'+E(dn(t.d))+'</span><span class="s">'+sc(t)+(t.a?'*':'')+'</span></div>'+(ex?'<div class="g">'+lab(t,'i','اهمیت')+lab(t,'u','فوریت')+lab(t,'b','پایه')+lab(t,'e','تلاش')+'</div><div class="add"><select data-a="dm" data-id="'+t.id+'">'+S.domains.map(function(d){return '<option value="'+d.id+'"'+(d.id===t.d?' selected':'')+'>'+E(d.name)+'</option>'}).join('')+'</select><button class="pri" data-close="1">ثبت</button><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div>':'')+'</div>'}
+return '<div class="rw"><div class="r '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'" data-open="'+t.id+'"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+' aria-label="انجام شد">'+(rank?'<span class="rk">'+rank+'</span>':'')+'<span class="n">'+E(t.n)+'</span><span class="chip">'+E(dn(t.d))+'</span><span class="s">'+sc(t)+(t.a?'*':'')+'</span></div>'+(ex?'<div class="g">'+lab(t,'i','هدف')+lab(t,'u','مهلت')+lab(t,'b','بقاء')+lab(t,'e','سختی')+'</div><div class="add"><select data-a="dm" data-id="'+t.id+'">'+S.domains.map(function(d){return '<option value="'+d.id+'"'+(d.id===t.d?' selected':'')+'>'+E(d.name)+'</option>'}).join('')+'</select><button class="pri" data-close="1">ثبت</button><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div>':'')+'</div>'}
 function viewAll(){
 var open=S.tasks.filter(function(t){return!t.x}).sort(by);
 var top=open.filter(inTop),pk=open.filter(function(t){return!inTop(t)}),dd=S.tasks.filter(function(t){return t.x});
