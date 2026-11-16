@@ -51,6 +51,7 @@ textarea{width:100%;background:var(--bg);color:var(--text);border:1px solid var(
 .pri{background:var(--ac);color:var(--bg);border:0;border-radius:8px;padding:7px 14px;cursor:pointer}
 .rw{border-top:1px solid var(--line)}.rw .r{border-top:0;cursor:pointer}
 .g select{flex:none;width:100%}
+.bar{gap:4px}.bar button{padding:8px 2px;font-size:13px}
 select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:5px;flex:1;font:inherit}
 </style>
 </head>
@@ -58,12 +59,12 @@ select{background:var(--bg);color:var(--text);border:1px solid var(--line);borde
 <h1>داشبورد اولویت‌ها</h1>
 <p class="sub">امتیاز = ۲×هدف + ۲×مهلت + بقاء − سختی (هر معیار ۱ تا ۵)</p>
 <p class="sub">هدف: چقدر به هدف‌هایم کمک می‌کند · مهلت: چقدر وقتش تنگ است · بقاء: چقدر امنیت و آرامشم را حفظ می‌کند · سختی: چقدر زمان و انرژی می‌گیرد</p>
-<div class="bar"><button data-tab="all">ترتیب کلی</button><button data-tab="dom">حوزه‌ها</button><button data-tab="mind">ذهن</button><button data-tab="bk">پشتیبان</button></div>
+<div class="bar"><button data-tab="today">امروز</button><button data-tab="all">ترتیب کلی</button><button data-tab="dom">حوزه‌ها</button><button data-tab="mind">ذهن</button><button data-tab="bk">پشتیبان</button></div>
 <div id="root"></div>
 <script>
 var KEY="dash_v1";
 var DEF={thr:10,lists:{ideas:[],anchors:[],rules:[]},domains:[{id:"d1",name:"زندگی روزمره",crit:"معیار: مهلت و آرامش روزمره"},{id:"d2",name:"روابط و روان",crit:"معیار: پایداری روانی و رابطه‌ی سالم"},{id:"d3",name:"تحصیل",crit:"معیار: پیشرفت دانشگاهی"},{id:"d4",name:"پروژه‌ی شخصی",crit:"معیار: پیشرفت و انتشار"},{id:"d5",name:"کار و درآمد",crit:"معیار: درآمد واقعی با کمترین هزینه‌ی زمان"}],tasks:[]};
-var S,tab="all";
+var S,tab="today";
 try{var raw=localStorage.getItem(KEY);S=raw?JSON.parse(raw):null}catch(e){S=null}
 if(!S||!S.tasks)S=JSON.parse(JSON.stringify(DEF));
 if(!S.lists)S.lists=JSON.parse(JSON.stringify(DEF.lists));
@@ -89,12 +90,28 @@ return '<div class="card"><h2>'+E(d.name)+'</h2><input type="text" class="crit" 
 ts.map(function(t){return '<div class="t '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'"><div class="top"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+'><input type="text" class="n" value="'+E(t.n)+'" data-a="f" data-k="n" data-id="'+t.id+'"><span class="s">'+sc(t)+'</span><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div><div class="g">'+lab(t,"i","هدف")+lab(t,"u","مهلت")+lab(t,"b","بقاء")+lab(t,"e","سختی")+'</div></div>'}).join('')+
 '<div class="add"><input type="text" id="add-'+d.id+'" placeholder="کار تازه…"><button data-add="'+d.id+'">افزودن</button></div></div>'}).join('')+
 '<button class="ghost" data-reset="1">بازنشانی به حالت اولیه</button>'}
-function render(){
+function render(){clean();
 document.querySelectorAll(".bar button").forEach(function(b){b.className=b.dataset.tab===tab?"on":""});
-document.getElementById("root").innerHTML=(tab==="all"?viewAll():tab==="dom"?viewDom():tab==="bk"?viewBk():viewMind())+'<p class="note">داده‌ها فقط در همین مرورگر ذخیره می‌شوند.</p>'}
+document.getElementById("root").innerHTML=(tab==="today"?viewToday():tab==="all"?viewAll():tab==="dom"?viewDom():tab==="bk"?viewBk():viewMind())+'<p class="note">داده‌ها فقط در همین مرورگر ذخیره می‌شوند.</p>'}
 function cl(v){v=parseInt(v,10);return isNaN(v)?3:Math.max(1,Math.min(5,v))}
 var OPEN=null;
 var FROZEN=null;
+var SL=[["a","فجر لين ظهر"],["b","ظهر لين مغرب"],["c","مغرب لين نوم"]];
+function today(){var d=new Date();return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate()}
+function clean(){var td=today();S.tasks.forEach(function(t){if(t.s&&t.sd!==td){t.s=0}})}
+function cnt(sl){return S.tasks.filter(function(t){return t.s===sl&&!t.x}).length}
+function assign(t,sl){if(!sl||sl==="none"){t.s=0;return}if(t.s!==sl&&cnt(sl)>=3){alert("این بخش پر است (حداکثر ۳ کار).");return}t.s=sl;t.sd=today()}
+function slotSel(t){return '<select data-a="slot" data-id="'+t.id+'"><option value="none">برای امروز…</option>'+SL.map(function(s){return '<option value="'+s[0]+'"'+(t.s===s[0]?' selected':'')+'>'+s[1]+'</option>'}).join('')+'<option value="none">حذف از امروز</option></select>'}
+function viewToday(){
+var td=today(),tot=0;
+var h='<p class="sub">هر بخش حداکثر ۳ کار. بدون ساعت. کارهای تیک‌نخورده شب به لیست برمی‌گردند.</p>';
+SL.forEach(function(s){
+var ts=S.tasks.filter(function(t){return t.s===s[0]&&!t.x}).sort(by);tot+=ts.length;
+h+='<div class="card"><h2>'+s[1]+'</h2>'+ts.map(function(t){return '<div class="r '+(t.dd===td?'dn':'')+'"><input type="checkbox" data-a="td" data-id="'+t.id+'"'+(t.dd===td?' checked':'')+' aria-label="انجام شد"><span class="n">'+E(t.n)+'</span><span class="chip">'+E(dn(t.d))+'</span><button class="x" data-rm="'+t.id+'" aria-label="حذف از امروز">×</button></div>'}).join('');
+if(ts.length<3){var opts=S.tasks.filter(function(t){return!t.x&&!t.s}).sort(by).slice(0,8);h+='<div class="add"><select data-a="pick" data-k="'+s[0]+'"><option value="">+ افزودن کار…</option>'+opts.map(function(t){return '<option value="'+t.id+'">'+E(t.n)+' ('+sc(t)+')</option>'}).join('')+'</select></div>'}else{h+='<div class="lab">این بخش پر است.</div>'}
+h+='</div>'});
+if(tot>6)h+='<div class="lab" style="color:var(--wn)">روزت پر است؛ لازم نیست همه‌ی این‌ها را انجام بدهی.</div>';
+return h}
 function snap(){var o=S.tasks.filter(function(t){return!t.x}).sort(function(a,b){return sc(b)-sc(a)});var pk={};o.forEach(function(t){if(sc(t)<S.thr)pk[t.id]=1});return{order:o.map(function(t){return t.id}),pk:pk}}
 function by(a,b){if(FROZEN){var x=FROZEN.order.indexOf(a.id),y=FROZEN.order.indexOf(b.id);if(x>-1&&y>-1)return x-y;if(x>-1)return -1;if(y>-1)return 1}return sc(b)-sc(a)}
 function inTop(t){var f=FROZEN;return f&&f.order.indexOf(t.id)>-1?!f.pk[t.id]:sc(t)>=S.thr}
@@ -129,7 +146,7 @@ var rs=S.domains.map(function(d){var s=S.tasks.filter(function(t){return t.d===d
 return '<div class="card"><h2>مقایسه‌ی حوزه‌ها</h2><div class="lab">میانگین سه کار برتر هر حوزه</div>'+rs.map(function(r){return '<div class="dr"><span class="dn2">'+E(r.n)+'</span><div class="bt"><i style="width:'+Math.round(r.a/24*100)+'%"></i></div><b>'+r.a.toFixed(1)+'</b></div>'}).join('')+'</div>'}
 function row(t,k,rank){
 var ex=OPEN===t.id;
-return '<div class="rw"><div class="r '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'" data-open="'+t.id+'"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+' aria-label="انجام شد">'+(rank?'<span class="rk">'+rank+'</span>':'')+'<span class="n">'+E(t.n)+'</span><span class="chip">'+E(dn(t.d))+'</span><span class="s">'+sc(t)+(t.a?'*':'')+'</span></div>'+(ex?'<div class="g">'+lab(t,'i','هدف')+lab(t,'u','مهلت')+lab(t,'b','بقاء')+lab(t,'e','سختی')+'</div><div class="add"><select data-a="dm" data-id="'+t.id+'">'+S.domains.map(function(d){return '<option value="'+d.id+'"'+(d.id===t.d?' selected':'')+'>'+E(d.name)+'</option>'}).join('')+'</select><button class="pri" data-close="1">ثبت</button><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div>':'')+'</div>'}
+return '<div class="rw"><div class="r '+(t.x?'dn':(sc(t)<S.thr?'pk':''))+'" data-open="'+t.id+'"><input type="checkbox" data-a="x" data-id="'+t.id+'"'+(t.x?' checked':'')+' aria-label="انجام شد">'+(rank?'<span class="rk">'+rank+'</span>':'')+'<span class="n">'+E(t.n)+'</span><span class="chip">'+E(dn(t.d))+'</span><span class="s">'+sc(t)+(t.a?'*':'')+'</span></div>'+(ex?'<div class="g">'+lab(t,'i','هدف')+lab(t,'u','مهلت')+lab(t,'b','بقاء')+lab(t,'e','سختی')+'</div><div class="add"><select data-a="dm" data-id="'+t.id+'">'+S.domains.map(function(d){return '<option value="'+d.id+'"'+(d.id===t.d?' selected':'')+'>'+E(d.name)+'</option>'}).join('')+'</select>'+slotSel(t)+'<button class="pri" data-close="1">ثبت</button><button class="x" data-del="'+t.id+'" aria-label="حذف">×</button></div>':'')+'</div>'}
 function viewAll(){
 var open=S.tasks.filter(function(t){return!t.x}).sort(by);
 var top=open.filter(inTop),pk=open.filter(function(t){return!inTop(t)}),dd=S.tasks.filter(function(t){return t.x});
@@ -139,7 +156,8 @@ var LB={ideas:["پارکینگ ایده","ایده‌ی تازه را اینجا
 function viewMind(){return ["ideas","anchors","rules"].map(function(k){var L=S.lists[k];return '<div class="card"><h2>'+LB[k][0]+'</h2><div class="lab">'+LB[k][1]+'</div>'+L.map(function(s,i){return '<div class="top t2"><input type="text" class="n" value="'+E(s)+'" data-a="l" data-k="'+k+'" data-i="'+i+'"><button class="x" data-ld="'+k+'|'+i+'" aria-label="حذف">×</button></div>'}).join('')+'<div class="add"><input type="text" id="la-'+k+'" placeholder="مورد تازه…"><button data-la="'+k+'">افزودن</button></div></div>'}).join('')}
 document.addEventListener("click",function(e){
 var t=e.target;
-if(t.dataset.close){OPEN=null;FROZEN=null;render()}
+if(t.dataset.rm){S.tasks.forEach(function(x){if(x.id===t.dataset.rm)x.s=0});save();render()}
+else if(t.dataset.close){OPEN=null;FROZEN=null;render()}
 else if(t.dataset.bkx){document.getElementById("bk").value=JSON.stringify(S)}
 else if(t.dataset.bki){try{var o=JSON.parse(document.getElementById("bk").value);if(!o||!Array.isArray(o.tasks)||!Array.isArray(o.domains))throw 0;if(!o.lists)o.lists=DEF.lists;S=o;save();render();document.getElementById("bkm").textContent="بازگردانی شد."}catch(err){document.getElementById("bkm").textContent="متن معتبر نیست."}}
 else if(t.dataset.cap){doCap()}
@@ -154,6 +172,9 @@ var t=e.target,a=t.dataset.a;if(!a)return;
 if(a==="x"){S.tasks.forEach(function(x){if(x.id===t.dataset.id)x.x=t.checked?1:0})}
 else if(a==="f"){S.tasks.forEach(function(x){if(x.id===t.dataset.id){x[t.dataset.k]=t.dataset.k==="n"?t.value:cl(t.value);if(t.dataset.k!=="n")x.a=0}})}
 else if(a==="c"){S.domains.forEach(function(d){if(d.id===t.dataset.id)d.crit=t.value})}
+else if(a==="slot"){var tk=S.tasks.filter(function(x){return x.id===t.dataset.id})[0];if(tk)assign(tk,t.value)}
+else if(a==="pick"){var tk2=S.tasks.filter(function(x){return x.id===t.value})[0];if(tk2)assign(tk2,t.dataset.k)}
+else if(a==="td"){S.tasks.forEach(function(x){if(x.id===t.dataset.id)x.dd=t.checked?today():0})}
 else if(a==="dm"){S.tasks.forEach(function(x){if(x.id===t.dataset.id)x.d=t.value})}
 else if(a==="l"){S.lists[t.dataset.k][+t.dataset.i]=t.value}
 else if(a==="thr"){var v=parseInt(t.value,10);S.thr=isNaN(v)?10:v}
